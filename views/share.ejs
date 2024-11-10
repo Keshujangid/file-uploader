@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Link</title>
+</head>
+<body>
+    <h1>Your Shareable Link</h1>
+    <p>Share this link to allow access:</p>
+    <input type="text" value="<%= linkUrl %>" readonly>
+    <button onclick="navigator.clipboard.writeText('<%= linkUrl %>')">Copy Link</button>
+</body>
+</html>

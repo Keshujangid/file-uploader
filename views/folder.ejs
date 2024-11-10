@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/folder.css">
+    <link rel="stylesheet" href="/header.css">
+    <script src="https://kit.fontawesome.com/18e980c78b.js" crossorigin="anonymous"></script>
+    <title>Drive - <%= folderInfo.name %>
+    </title>
+</head>
+
+<body>
+    <!-- Header -->
+    <%- include('./partial/header.ejs') %>
+
+        <!-- Main Container with Sidebar and Content -->
+        <div class="container">
+
+            <!-- Main Content -->
+            <main class="content">
+
+
+                <!-- Share Button -->
+                <button id="shareButton" class="btn-share"><i class="fa-solid fa-share-nodes"></i></button>
+
+                <!-- Share Duration Form (hidden by default) -->
+                <div id="shareForm" style="display: none;">
+                    <form action="/drive/<%= folderInfo.id %>/share" method="POST">
+                        <label for="duration">Share for:</label>
+                        <select name="duration" id="duration" required>
+                            <option value="1">1 hour</option>
+                            <option value="3">3 hours</option>
+                            <option value="24">24 hours</option>
+                        </select>
+                        <button type="submit">Generate Link</button>
+                    </form>
+                </div>
+
+                <script>
+                    // Toggle form visibility when share button is clicked
+                    document.getElementById('shareButton').onclick = function () {
+                        const form = document.getElementById('shareForm');
+                        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                    };
+                </script>
+
+
+                <div class="breadcrumb-container">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <% breadcrumbPath.forEach((dir, index)=> { %>
+                                <% if (index < breadcrumbPath.length - 1) { %>
+                                    <li class="breadcrumb-item">
+                                        <a href="/drive/<%= dir.id %>">
+                                            <%= dir.name %>
+                                        </a>
+                                    </li>
+                                    <% } else { %>
+                                        <li class="breadcrumb-item active" aria-current="page">
+                                            <%= dir.name %>
+                                        </li>
+                                        <% } %>
+                                            <% }) %>
+                        </ol>
+                    </nav>
+                </div>
+
+                <!-- Error message -->
+                <% if (messages.error) { %>
+                    <div class="alert alert-danger">
+                        <%= messages.error %>
+                    </div>
+                    <% }else if(messages.success){ %>
+                        <div class="success">
+                            <%= messages.success %>
+                        </div>
+                        <% } %>
+
+
+
+                            <!-- Directory Header -->
+                            <!-- <h1><%= folderInfo.name %></h1> -->
+
+                            <!-- Display child directories (subfolders) -->
+                            <section class="section">
+                                <% if (folderInfo.children.length> 0) { %>
+                                    <ul class="folder-list">
+                                        <% folderInfo.children.forEach(child=> { %>
+                                            <li>
+                                                <i class="fa-regular fa-folder"></i>
+                                                <a href="/drive/<%= child.id %>">
+                                                    <%= child.name %>
+                                                </a>
+                                                <div class="folder-meta">
+                                                    <span>Size: <%= child.size %> KB</span>
+                                                    <span>Created: <%= child.createdAt.toLocaleDateString() %></span>
+                                                </div>
+                                                <!-- Action Buttons -->
+                                                <div class="action-buttons">
+                                                    <!-- <a href="#" class="btn-edit" onclick="openEditForm('<%= child.id %>', '<%= child.name %>')"><i class="fa-solid fa-pen"></a> -->
+                                                    <a href="/drive/edit/<%= child.id %>/folder" class="btn-edit"><i
+                                                            class="fa-solid fa-pen"></i></a>
+                                                    <form action="/drive/delete/folder/<%= child.id %>" method="POST"
+                                                        style="display:inline;">
+                                                        <button type="submit" class="btn-delete"><i
+                                                                class="fa-solid fa-trash-can"></i></button>
+                                                    </form>
+                                                </div>
+                                            </li>
+                                            <% }) %>
+                                    </ul>
+                                    <% } %>
+                            </section>
+
+
+                            <!-- Display files in the directory -->
+                            <section class="section">
+                                <% if (folderInfo.files.length> 0) { %>
+                                    <ul class="file-list">
+                                        <% folderInfo.files.forEach(file=> { %>
+                                            <li>
+                                                <i class="fa-solid fa-file"></i>
+                                                <a href="/drive/file/<%= file.id %>">
+                                                    <%= file.filename %>
+                                                </a>
+                                                <div class="file-meta">
+                                                    <span>Size: <%= file.size %> KB</span>
+                                                    <span>Created: <%= file.createdAt.toLocaleDateString() %></span>
+                                                </div>
+                                                <!-- Action Buttons -->
+                                                <div class="action-buttons">
+                                                    <a href="/drive/edit/<%= file.id %>/file" class="btn-edit"><i
+                                                            class="fa-solid fa-pen"></i></a>
+                                                    <form action="/drive/delete/file/<%= file.id %>" method="POST"
+                                                        style="display:inline;">
+                                                        <button type="submit" class="btn-delete"><i
+                                                                class="fa-solid fa-trash-can"></i></button>
+                                                    </form>
+                                                </div>
+                                            </li>
+                                            <% }) %>
+                                    </ul>
+                                    <% } %>
+                            </section>
+
+
+
+                            <!-- Upload File and Create Folder Forms -->
+                            <section class="section">
+                                <form action="/drive/<%= folderInfo.id %>/upload" method="POST"
+                                    enctype="multipart/form-data" id="uploadForm">
+                                    <input type="file" name="file" id="fileInput"required />
+                                    <button id="uploadButton" type="submit">Upload File</button>
+                                </form>
+                                <form action="/drive/<%= folderInfo.id %>/create-folder" method="POST">
+                                    <input type="text" name="folderName" placeholder="New Folder Name" required />
+                                    <button type="submit">Create Folder</button>
+                                </form>
+                            </section>
+            </main>
+
+        </div>
+</body>
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const uploadButton = document.getElementById('uploadButton');
+    const form = document.getElementById('uploadForm');
+
+    // Enable button when a file is selected
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            uploadButton.disabled = false; // Enable button if file is selected
+        }
+    });
+
+    // Disable button when the form is submitted
+    form.addEventListener('submit', () => {
+        uploadButton.disabled = true; // Disable button when submitting form
+    });
+</script>
+
+</html>

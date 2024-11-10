@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String 
+  expiresAt DateTime
+}
+
+model UserCredentials {
+  id       String    @id @default(uuid())
+  username String @unique
+  password String
+  userId   String    @unique
+  user     User   @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id          String @id @default(uuid())
+  name        String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  credentials UserCredentials?
+  directories Directory[]      @relation("UserDirectories") // Represents folders/files
+  ShareLink   ShareLink[]
+  // File        File[]
+}
+
+model File {
+  id          String         @id @default(uuid())
+  filename    String
+  filepath    String // Path where the file is stored
+  createdAt   DateTime    @default(now())
+  size        Int
+  fileType    String
+  resourceType String
+  downloadUrl String
+  cloudinaryPulicId String
+  directoryId String?
+  directory   Directory?  @relation("DirectoryFiles", fields: [directoryId], references: [id], onDelete: Cascade) // Add opposite relation to Directory
+  shareLinks  ShareLink[] @relation("FileShareLinks")
+}
+
+model Directory {
+  id         String         @id @default(uuid())
+  name       String
+  type       DocTypes    @default(DIRECTORY)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  userId     String // Foreign key to User
+  user       User        @relation("UserDirectories", fields: [userId], references: [id])
+  parentId   String? // Self-referencing relation to allow nested folders
+  parent     Directory?  @relation("FolderParent", fields: [parentId], references: [id])
+  children   Directory[] @relation("FolderParent")
+  files      File[]      @relation("DirectoryFiles")
+  shareLinks ShareLink[] @relation("DirectoryShareLinks")
+}
+
+enum DocTypes {
+  FILE
+  DIRECTORY
+}
+
+model ShareLink {
+  id          String        @id @default(uuid())
+  expiresAt   DateTime
+  itemType    DocTypes
+  directoryId String?
+  fileId      String?
+  ownerId     String
+  directory   Directory? @relation("DirectoryShareLinks", fields: [directoryId], references: [id], onDelete: Cascade)
+  file        File?      @relation("FileShareLinks", fields: [fileId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}

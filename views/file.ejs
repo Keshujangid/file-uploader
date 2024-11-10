@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File: <%= fileInfo.filename %></title>
+    <link rel="stylesheet" href="/file.css">
+    <link rel="stylesheet" href="/header.css">
+</head>
+<body>
+    <!-- Header -->
+    <%- include('./partial/header') %>
+
+    <!-- Main File Container -->
+    <div class="file-container">
+        <h1>File: <%= fileInfo.filename %></h1>
+        <li><a href="javascript:history.back()">back</a></li>
+
+        <!-- File Details -->
+        <div class="file-details">
+            <p><strong>File Name:</strong> <%= fileInfo.filename %></p>
+            <p><strong>File Size:</strong> <%= (fileInfo.size / 1024).toFixed(2) %> KB</p>
+            <p><strong>Uploaded At:</strong> <%= fileInfo.createdAt.toLocaleString() %></p>
+            <p><strong>File Type:</strong> <%= fileInfo.fileType %></p>
+        </div>
+
+        <!-- File Preview -->
+        <div class="file-preview">
+            <% if (fileInfo.fileType.startsWith("image/")) { %>
+                <h2>Preview:</h2>
+                <img src="<%= fileInfo.filepath %>" %>" alt="Image preview" class="preview-image" />
+            <% } else if (fileInfo.fileType === "application/pdf") { %>
+                <h2>Preview:</h2>
+                <embed src="<%= fileInfo.filepath%>" type="application/pdf" class="preview-pdf" />
+            <% } else { %>
+                <p>Preview not available for this file type. You can download the file instead.</p>
+            <% } %>
+        </div>
+
+        <!-- Action Buttons (Download and Delete) -->
+        <a href="<%= fileInfo.filepath%>" class="btn download-btn" download>Download File</a>       
+
+    </div>
+</body>
+</html>

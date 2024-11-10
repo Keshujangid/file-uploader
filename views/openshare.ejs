@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/folder.css">
+    <link rel="stylesheet" href="/header.css">
+    <script src="https://kit.fontawesome.com/18e980c78b.js" crossorigin="anonymous"></script>
+    <title>Drive - <%= folderInfo.name %>
+    </title>
+</head>
+
+<body>
+    <!-- Header -->
+    <%- include('./partial/header.ejs') %>
+
+        <!-- Main Container with Sidebar and Content -->
+        <div class="container">
+       
+            <!-- Main Content -->
+            <main class="content">
+
+
+                <div class="breadcrumb-container">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <% breadcrumbPath.forEach((dir, index)=> { %>
+                                <% if (index < breadcrumbPath.length - 1) { %>
+                                    <li class="breadcrumb-item">
+                                        <a href="/share/<%= shareId %>/dir/<%= dir.id %>"><%= dir.name %></a> 
+                                    </li>
+                                    <% } else { %>
+                                        <li class="breadcrumb-item active" aria-current="page">
+                                            <%= dir.name %>
+                                        </li>
+                                        <% } %>
+                                            <% }) %>
+                        </ol>
+                    </nav>
+                </div>
+                
+                <% if (locals.message) { %>
+                    <div class="message">
+                        <%= locals.message %>
+                    </div>
+                    <% } %>
+
+               <!-- Directory Header -->
+               <h1><%= folderInfo.name %></h1>
+                
+               <!-- Display child directories (subfolders) -->
+               <section class="section">
+                   <% if (folderInfo.children.length > 0) { %>
+                       <ul class="folder-list">
+                           <% folderInfo.children.forEach(child => { %>
+                               <li>
+                                   <i class="fa-regular fa-folder"></i>
+                                   <a href="/share/<%= shareId %>/dir/<%= child.id %>"><%= child.name %></a>
+                                   <div class="folder-meta">
+                                       <!-- Assuming folder size and creation date are available -->
+                                       <span>Size: <%= child.size %> KB</span>
+                                       <span>Created: <%= child.createdAt.toLocaleDateString() %></span>
+                                   </div>
+                               </li>
+                           <% }) %>
+                       </ul>
+                   <% } %>
+               </section>
+               
+               <!-- Display files in the directory -->
+               <section class="section">
+                   <% if (folderInfo.files.length > 0) { %>
+                       <ul class="file-list">
+                           <% folderInfo.files.forEach(file => { %>
+                               <li>
+                                   <i class="fa-solid fa-file"></i>
+                                   <a href="/share/<%= shareId %>/file/<%= file.id %>"><%= file.filename %></a>
+                                   <div class="file-meta">
+                                       <span>Size: <%= file.size %> KB</span>
+                                       <span>Created: <%= file.createdAt.toLocaleDateString() %></span>
+                                   </div>
+                               </li>
+                           <% }) %>
+                       </ul>
+                   <% } %>
+               </section>         
+
+            </main>
+        </div>
+</body>
+
+</html>
