@@ -18,6 +18,7 @@ RUN npm install
 # Run Prisma generate to create the client
 RUN npx prisma generate
 
+RUN npx prisma generate --schema=./prisma/schema.prisma
 # Copy all other files
 COPY . .
 
