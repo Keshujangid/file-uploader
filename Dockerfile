@@ -15,6 +15,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# Run Prisma generate to create the client
+RUN npx prisma generate
+
 # Copy all other files
 COPY . .
 
