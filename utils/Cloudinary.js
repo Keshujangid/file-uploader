@@ -1,6 +1,6 @@
 const cloudinary = require('cloudinary').v2
-const fs = require('fs')
 require('dotenv').config();
+const streamifier = require('streamifier');
 
 
 cloudinary.config({
@@ -9,22 +9,24 @@ cloudinary.config({
     api_secret: process.env.API_SECRET
 });
 
-async function cloudUpload(filePath) {
-    try {
-        if (!filePath) return null;
-
-        const uploadResult = await cloudinary.uploader.upload(
-            filePath, {
-                resource_type : "auto"
+function cloudUpload(fileBuffer) {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto' },
+            (error, result) => {
+                if (error) {
+                    reject(new Error('Cloud upload failed: ' + error.message));
+                } else {
+                    resolve(result);
+                }
             }
-        )
-        return uploadResult
-    } catch (error) {
-        throw error.message;
-        
-        // return null;     
-    }
+        );
+
+        // Pipe the file buffer to Cloudinary
+        streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
 }
+
 
 
 

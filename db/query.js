@@ -172,52 +172,33 @@ async function getFolderContent(folderId) {
 // Query to store file in the database
 
 const storeFileInDB = async (directoryId, file) => {
-    const { originalname, path, mimetype, size } = file;
+    const { filename, filepath, fileType,mimetype, size,resourceType,downloadUrl ,cloudinaryPulicId} = file;
+    console.log('storeFileInDB', directoryId, file);
 
     try {
         if (!directoryId) {
             throw new Error("Directory ID is required.");
         }
 
-        // Upload file to Cloudinary
-        const uploadResult = await cloudUpload(path);
-        if (!uploadResult) {
-            throw new Error("File upload to Cloudinary failed.");
-        }
-        console.log('File uploaded to Cloudinary:', uploadResult);
-        // const downloadUrl = getCloudinaryDownloadLink(uploadResult.asset_id);
 
-
-        // Save file information in the database with the Cloudinary URL
         const uploadedFile = await prisma.file.create({
             data: {
-                filename: originalname,
-                filepath: uploadResult.secure_url, // Cloudinary URL
-                fileType: mimetype,
-                resourceType: uploadResult.resource_type,
-                cloudinaryPulicId: uploadResult.public_id,
+                filename: filename,
+                filepath: filepath, // Cloudinary URL
+                fileType: fileType,
+                resourceType: resourceType,
+                cloudinaryPulicId: cloudinaryPulicId,
                 size: size,
-                downloadUrl: uploadResult.secure_url,
+                downloadUrl: downloadUrl,
                 directoryId: directoryId, // Ensure directoryId is an integer
                 createdAt: new Date(),
             }
         });
 
-
-        fs.unlink(path, (error) => {
-            if (error) console.error('Error deleting local file:', error);
-        });
-
         return uploadedFile;
     } catch (err) {
-        // Delete the local file if the upload failed
-        if (fs.existsSync(path)) {
-            fs.unlink(path, (error) => {
-                if (error) console.error('Error deleting local file on failure:', error);
-            });
-        }
-        // fs.unlinkSync(path);
-        // console.error('Error storing file in DB:', err);
+
+        console.error('Error storing file in DB:', err);
         throw err;
     }
 };

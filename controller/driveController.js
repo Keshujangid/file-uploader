@@ -1,6 +1,7 @@
 const prisma = require('../db/prismaClient')
 const query = require('../db/query');
-const {cloudinary} = require('../utils/Cloudinary');
+const {cloudinary, cloudUpload} = require('../utils/Cloudinary');
+const streamifier = require('streamifier');
 
 async function getDrive(req, res) {
     if (req.isAuthenticated()) {
@@ -21,27 +22,31 @@ async function uploadFile(req, res, next) {
         if (!req.isAuthenticated()) {
             return res.redirect('/login')
         }
-        const { dirId } = req.params; // ID of the directory where the file is uploaded
-        const userId = req.user.id; // User ID from the session
-        const file = req.file; // File uploaded via Multer
-        // console.log('file', file)
-        // Check if a file was uploaded
+        const { dirId } = req.params; 
+        const userId = req.user.id; 
+        const file = req.file; 
+
         if (!file) {
             res.status(400).send("No file uploaded.");
             return;
         }
 
-        // Determine the target directory for the file upload
         let directoryId = dirId ? dirId : null;
 
         // If no directoryId is provided (user is in the root directory), fetch the root directory
         if (!directoryId) {
             res.redirect('/drive')
         }
+        const isOwner = await query.verifyUserFolder(userId, directoryId);
+        if (!isOwner) {
+            return res.redirect('/drive');
+        }
+        const result = await cloudUpload(req.file.buffer);
 
-        await query.storeFileInDB(directoryId, file)
 
-        // Redirect the user back to the current directory after the upload
+        const fileData = {filename: file.originalname, filepath: result.secure_url, userId: userId, directoryId: directoryId, cloudinaryPulicId: result.public_id,size:file.size,fileType:file.mimetype ,resourceType: result.resource_type,downloadUrl:result.secure_url}
+        await query.storeFileInDB(directoryId, fileData)
+        // console.log('fileData', fileData)
         req.flash('success', 'File uploaded successfully');
         res.redirect(`/drive/${directoryId}`);
     } catch (error) {
